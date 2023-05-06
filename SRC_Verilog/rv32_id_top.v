@@ -76,9 +76,12 @@ module rv32_id_top
 	parameter	BGEU			=	3'b111		;
 	
 	parameter	S_type		=	7'b0100011	;	
+	parameter   E_BREAK		=	32'h00100073;
 	
 	wire 	[6:0] 	opcode							;
 	wire	[2:0]		funct3							;
+	wire signed	[31:0]	rs1_data_in_temp				;
+	wire signed	[31:0]	rs2_data_in_temp				;
 	reg	[31:0]	rs1_data_out_buff				;
 	reg	[31:0]	rs2_data_out_buff				;
 	reg	[31:0]	signex_or_up_immediate		;
@@ -200,6 +203,11 @@ module rv32_id_top
 			rs2_data_out_buff	<=	regif_rs2_data				;
 	end 
 	
+	
+	
+	assign rs1_data_in_temp = rs1_data_out_buff				;
+	assign rs2_data_in_temp = rs2_data_out_buff				;
+	
 		
 	//comb always block for immediate values 
 	always@(*)
@@ -255,7 +263,7 @@ module rv32_id_top
 					case(funct3)
 						BEQ:
 						begin
-							if(rs1_data_out_buff == rs2_data_out_buff)
+							if(rs1_data_in_temp == rs2_data_in_temp)
 							begin
 								jump_enable	<=	1'b1										;
 								jump_addr	<=	pc_in + signex_or_up_immediate	;
@@ -268,7 +276,7 @@ module rv32_id_top
 						end
 						BNE:
 						begin
-							if(rs1_data_out_buff != rs2_data_out_buff)
+							if(rs1_data_in_temp != rs2_data_in_temp)
 							begin
 								jump_enable	<=	1'b1										;
 								jump_addr	<=	pc_in + signex_or_up_immediate	;
@@ -281,7 +289,7 @@ module rv32_id_top
 						end
 						BLT:
 						begin
-							if(rs1_data_out_buff < rs2_data_out_buff)
+							if(rs1_data_in_temp < rs2_data_in_temp)
 							begin
 								jump_enable	<=	1'b1										;
 								jump_addr	<=	pc_in + signex_or_up_immediate	;
@@ -294,7 +302,7 @@ module rv32_id_top
 						end
 						BGE:
 						begin
-							if(rs1_data_out_buff >= rs2_data_out_buff)
+							if(rs1_data_in_temp >= rs2_data_in_temp)
 							begin
 								jump_enable	<=	1'b1										;
 								jump_addr	<=	pc_in + signex_or_up_immediate	;
@@ -307,7 +315,7 @@ module rv32_id_top
 						end
 						BLTU:
 						begin
-							if({1'b0,rs1_data_out_buff}=={1'b0,rs2_data_out_buff})
+							if({1'b0,rs1_data_out_buff}<={1'b0,rs2_data_out_buff})
 							begin
 								jump_enable	<=	1'b1										;
 								jump_addr	<=	pc_in + signex_or_up_immediate	;
@@ -396,8 +404,11 @@ assign jump_enable_rsg = jump_enable & ~jump_enable_del	;
 	begin
 		if(reset)
 			halt_flag	<=	1'b0	;
-		else if((iw_in[20] == 1'b1)&&(iw_in[6:0] == 7'b1110011))  //This is the decoding of instruction for EBREAK instruction 
+		//else if((iw_in[20] == 1'b1)&&(iw_in[6:0] == 7'b1110011))  //This is the decoding of instruction for EBREAK instruction 
+		else if(iw_in == E_BREAK)
 			halt_flag	<=	1'b1	;
+		else
+			halt_flag	<=	halt_flag	;
 	end 
 	
 	//debug signals 
