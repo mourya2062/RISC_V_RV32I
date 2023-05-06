@@ -5,6 +5,8 @@ Clock Frequency : 10 MHz
 
 How To Use Those Files :
 Note:Vivado Users remove the altera_clk IP core and instantiate BUFG instead 
+Note:Modify the IO_moule as per your board requirements 
+Note:You need a linker script for compiling the C files ,if you don't have one reach me at my mail
 
 1)Install the riscv_gcc compiler from github 
 2)Copy all the files into your IDE tool(vivado,Quartus)
